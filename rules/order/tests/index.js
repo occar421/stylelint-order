@@ -1457,3 +1457,215 @@ testRule(rule, {
 		},
 	],
 });
+
+testRule(rule, {
+	ruleName,
+	config: [['declarations', 'rules', 'at-rules']],
+	syntax: 'css-in-js',
+	fix: true,
+
+	accept: [
+		{
+			code: `
+				const Component1 = styled.div({
+					color: 'tomato',
+
+					a: {
+						color: 'blue',
+					},
+
+					'@media screen': {
+						color: 'black',
+					},
+				});
+			`,
+		},
+		{
+			code: `
+				const Component1 = styled.div(props => ({
+					color: 'tomato',
+
+					...(props.great && { color: 'red' }),
+
+					a: {
+						color: 'blue',
+					},
+
+					'@media screen': {
+						color: 'black',
+					},
+				}));
+			`,
+		},
+		{
+			code: `
+				const Component5 = styled.div(props => ({
+					div: {
+						display: 'none',
+
+						...(props.great && { color: 'red' }),
+
+						a: {},
+
+						'@media (orientation: portrait)': {},
+					}
+				}));
+			`,
+			// FIXME @media (min-width: 100px)
+		},
+	],
+
+	reject: [
+		{
+			code: `
+				const Component1 = styled.div({
+					a: {
+						color: 'blue',
+					},
+					color: 'tomato',
+
+					'@media screen': {
+						color: 'black',
+					},
+				});
+			`,
+			fixed: `
+				const Component1 = styled.div({
+					color: 'tomato',
+					a: {
+						color: 'blue',
+					},
+
+					'@media screen': {
+						color: 'black',
+					},
+				});
+			`,
+			message: messages.expected('declaration', 'rule'),
+		},
+		{
+			code: `
+				const Component2 = styled.div({
+					'@media screen': {
+						color: 'black',
+					},
+					[Button]: {
+						color: 'blue',
+					},
+					color: 'tomato',
+				});
+			`,
+			fixed: `
+				const Component2 = styled.div({
+					color: 'tomato',
+					[Button]: {
+						color: 'blue',
+					},
+					'@media screen': {
+						color: 'black',
+					},
+				});
+			`,
+		},
+		{
+			code: `
+				const Component3 = styled.div({
+					div: {
+						a: {
+							color: 'blue',
+						},
+						color: 'tomato',
+					},
+				});
+			`,
+			fixed: `
+				const Component3 = styled.div({
+					div: {
+						color: 'tomato',
+						a: {
+							color: 'blue',
+						},
+					},
+				});
+			`,
+		},
+		{
+			code: `
+				const Component4 = styled.div({
+					span: {},
+
+					display: 'none',
+
+					'@media (orientation: portrait)': {},
+
+					div: {},
+				});
+			`,
+			// FIXME @media (min-width: 100px)
+			fixed: `
+				const Component4 = styled.div({
+
+					display: 'none',
+					span: {},
+
+					div: {},
+
+					'@media (orientation: portrait)': {},
+				});
+			`,
+			// FIXME @media (min-width: 100px)
+		},
+		{
+			code: `
+				const Component5 = styled.div({
+					div: {
+						span: {},
+
+						display: 'none',
+
+						'@media (orientation: portrait)': {},
+
+						div: {},
+					},
+				});
+			`,
+			fixed: `
+				const Component5 = styled.div({
+					div: {
+
+						display: 'none',
+						span: {},
+
+						div: {},
+
+						'@media (orientation: portrait)': {},
+					},
+				});
+			`,
+		},
+		{
+			code: `
+				const Component3 = styled.div(props => ({
+					...(props.great && { color: 'red' }),
+					div: {
+						a: {
+							color: 'blue',
+						},
+						color: 'tomato',
+					},
+				}));
+			`,
+			fixed: `
+				const Component3 = styled.div(props => ({
+					...(props.great && { color: 'red' }),
+					div: {
+						color: 'tomato',
+						a: {
+							color: 'blue',
+						},
+					},
+				}));
+			`,
+		},
+	],
+});
